@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
-using TaskListApi.Model;
+using TaskListApi.Domain;
 
 namespace TaskListApi.Context;
 

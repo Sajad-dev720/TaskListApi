@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using TaskListApi.Model;
+using TaskListApi.Domain;
 
 namespace TaskListApi.Configurations;
 
@@ -14,6 +14,6 @@ public class TaskConfiguration : IEntityTypeConfiguration<TaskEntity>
 
         builder.Property(x => x.Title).HasMaxLength(256);
 
-        builder.Property(x => x.Descrption).HasMaxLength(1024);
+        builder.Property(x => x.Description).HasMaxLength(1024);
     }
 }

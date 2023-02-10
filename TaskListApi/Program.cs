@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TaskListApi.Context;
+using TaskListApi.Domain;
+using AutoMapper;
 using TaskListApi.Model;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,17 +15,15 @@ builder.Services.AddDbContextPool<ITaskListDbContext, TaskListDbContext>((servic
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy(name: "myOrigins", policy =>
-    {
-        policy.WithOrigins("http://localhost:5173/");
-    });
-});
+builder.Services.AddCors();
+builder.Services.AddAutoMapper(typeof(Program).Assembly);
 
 var app = builder.Build();
 
-app.UseCors("myOrigins");
+app.UseCors(options =>
+{
+    options.AllowAnyHeader().AllowAnyOrigin();
+});
 
 if (app.Environment.IsDevelopment())
 {
@@ -35,12 +35,25 @@ app.UseHttpsRedirection();
 
 app.MapGet("/getTasks", async (ITaskListDbContext context) =>
 {
-    var query = context.Task.AsNoTracking();
+    var query = context.Task
+        .AsNoTracking()
+        .OrderByDescending(o => o.CreatedAt)
+        .Select(x => new TaskModel
+        {
+            Id = x.Id,
+            Title = x.Title,
+            DeadLineDays = x.DeadLineDays,
+            Description = x.Description,
+            IsDone = x.IsDone,
+            IsDeleted = x.IsDeleted,
+            CreatedAt = x.CreatedAt,
+            LastModifiedAt = x.LastModifiedAt,
+        });
 
     return Results.Ok(await query.ToListAsync());
-}).RequireCors("myOrigins");
+});
 
-app.MapGet("/getTaskById", async (int id, ITaskListDbContext context) =>
+app.MapGet("/getTaskById", async (int id, ITaskListDbContext context, IMapper mapper) =>
 {
     var entity = await context.Task.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
 
@@ -49,21 +62,29 @@ app.MapGet("/getTaskById", async (int id, ITaskListDbContext context) =>
         return Results.NotFound();
     }
 
-    return Results.Ok(entity);
+    var model = mapper.Map<TaskModel>(entity);
+
+    return Results.Ok(model);
 });
 
-app.MapPost("/createTask", async (TaskEntity task, ITaskListDbContext context) =>
+app.MapPost("/createTask", async (TaskEntity task, ITaskListDbContext context, IMapper mapper) =>
 {
-    var result = await context.Task.AddAsync(task);
+    var res = await context.Task.AddAsync(task);
     await context.SaveChangesAsync();
-    return Results.Ok(result.Entity);
+
+    var model = mapper.Map<TaskModel>(res.Entity);
+
+    return Results.Ok(model);
 });
 
-app.MapPut("/updateTask", async (TaskEntity task, ITaskListDbContext context) =>
+app.MapPut("/updateTask", async (TaskEntity task, ITaskListDbContext context, IMapper mapper) =>
 {
     var res = context.Task.Update(task);
     await context.SaveChangesAsync();
-    return Results.Ok(task);
+
+    var model = mapper.Map<TaskModel>(res.Entity);
+
+    return Results.Ok(model);
 });
 
 app.MapDelete("/deleteTask", async (int id, ITaskListDbContext context) =>

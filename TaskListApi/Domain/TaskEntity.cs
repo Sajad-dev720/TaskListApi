@@ -1,4 +1,4 @@
-﻿namespace TaskListApi.Model;
+﻿namespace TaskListApi.Domain;
 
 public class TaskEntity
 {
@@ -6,7 +6,7 @@ public class TaskEntity
 
     public string Title { get; set; } = null!;
 
-    public string? Descrption { get; set; }
+    public string? Description { get; set; }
 
     public bool IsDone { get; set; }
 

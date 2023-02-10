@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TaskListApi.Context;
 
@@ -11,9 +12,11 @@ using TaskListApi.Context;
 namespace TaskListApi.Migrations
 {
     [DbContext(typeof(TaskListDbContext))]
-    partial class TaskListDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230210075312_Typo")]
+    partial class Typo
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
