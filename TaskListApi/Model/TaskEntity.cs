@@ -17,4 +17,6 @@ public class TaskEntity
     public DateTime LastModifiedAt { get; set; }
 
     public DateTime ExpiresAt => CreatedAt.AddDays(DeadLineDays);
+
+    public bool IsDeleted { get; set; } = false;
 }
