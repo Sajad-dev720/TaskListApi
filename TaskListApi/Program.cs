@@ -38,7 +38,7 @@ app.MapGet("/getTasks", async (ITaskListDbContext context) =>
     var query = context.Task.AsNoTracking();
 
     return Results.Ok(await query.ToListAsync());
-});
+}).RequireCors("myOrigins");
 
 app.MapGet("/getTaskById", async (int id, ITaskListDbContext context) =>
 {
