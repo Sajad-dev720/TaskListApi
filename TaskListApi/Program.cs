@@ -3,6 +3,7 @@ using TaskListApi.Context;
 using TaskListApi.Domain;
 using AutoMapper;
 using TaskListApi.Model;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,7 +23,10 @@ var app = builder.Build();
 
 app.UseCors(options =>
 {
-    options.AllowAnyHeader().AllowAnyOrigin();
+    options
+    .AllowAnyOrigin()
+    .AllowAnyMethod()
+    .AllowAnyHeader();
 });
 
 if (app.Environment.IsDevelopment())
@@ -37,6 +41,7 @@ app.MapGet("/getTasks", async (ITaskListDbContext context) =>
 {
     var query = context.Task
         .AsNoTracking()
+        .Where(w => !w.IsDeleted)
         .OrderByDescending(o => o.CreatedAt)
         .Select(x => new TaskModel
         {
@@ -67,7 +72,7 @@ app.MapGet("/getTaskById", async (int id, ITaskListDbContext context, IMapper ma
     return Results.Ok(model);
 });
 
-app.MapPost("/createTask", async (TaskEntity task, ITaskListDbContext context, IMapper mapper) =>
+app.MapPost("/createTask", async ([FromBody]TaskEntity task, ITaskListDbContext context, IMapper mapper) =>
 {
     var res = await context.Task.AddAsync(task);
     await context.SaveChangesAsync();
@@ -77,7 +82,7 @@ app.MapPost("/createTask", async (TaskEntity task, ITaskListDbContext context, I
     return Results.Ok(model);
 });
 
-app.MapPut("/updateTask", async (TaskEntity task, ITaskListDbContext context, IMapper mapper) =>
+app.MapPut("/updateTask", async ([FromBody]TaskEntity task, ITaskListDbContext context, IMapper mapper) =>
 {
     var res = context.Task.Update(task);
     await context.SaveChangesAsync();
@@ -87,9 +92,9 @@ app.MapPut("/updateTask", async (TaskEntity task, ITaskListDbContext context, IM
     return Results.Ok(model);
 });
 
-app.MapDelete("/deleteTask", async (int id, ITaskListDbContext context) =>
+app.MapPut("/deleteTask", async ([FromBody]TaskModel model, ITaskListDbContext context) =>
 {
-    var entity = await context.Task.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
+    var entity = await context.Task.AsNoTracking().FirstOrDefaultAsync(x => x.Id == model.Id);
 
     if (entity is null)
     {
@@ -101,7 +106,7 @@ app.MapDelete("/deleteTask", async (int id, ITaskListDbContext context) =>
     context.Task.Update(entity);
     await context.SaveChangesAsync();
 
-    return Results.Ok(id);
+    return Results.Ok(model.Id);
 });
 
 app.Run();
